@@ -386,14 +386,22 @@ vince       1750  0.0  0.2   6408  2280 pts/1    S+   12:21   0:00 grep --color=
 
 🌞 **Trouver le chemin où est stocké le programme `sleep`**
 
-- je veux voir un `ls -al /chemin | grep sleep` dans le rendu
+```
+[vince@web ~]$ ls -al /usr/bin/sleep | grep sleep
+-rwxr-xr-x. 1 root root 36312 Apr 24  2023 /usr/bin/sleep
+```
 
 🌞 Tant qu'on est à chercher des chemins : **trouver les chemins vers tous les fichiers qui s'appellent `.bashrc`**
 
-- utilisez la commande `find`
-- `find` s'utilise comme suit : `find CHEMIN -name NAME`
-  - `CHEMIN` c'est un chemin vers un dossier : `find` va chercher des fichiers qui sont contenus dans ce dossier
-  - `NAME` est le nom du fichier qu'on cherche
+```
+[vince@web ~]$ sudo find / -name ".bashrc"
+[sudo] password for vince:
+/etc/skel/.bashrc
+/root/.bashrc
+/home/vince/.bashrc
+/home/marmotte/.bashrc
+/home/papier_alu/.bashrc
+```
 
 ➜ `find` est une commande de ouf qui permet de trouver des fichiers ou dossiers selon plein de critères
 
@@ -443,6 +451,16 @@ $ which ls
 🌞 **Vérifier que**
 
 - les commandes `sleep`, `ssh`, et `ping` sont bien des programmes stockés dans l'un des dossiers listés dans votre `PATH`
+```
+[vince@web ~]$ echo $PATH
+/home/vince/.local/bin:/home/vince/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin
+[vince@web ~]$ which sleep
+/usr/bin/sleep
+[vince@web ~]$ which ssh
+/usr/bin/ssh
+[vince@web ~]$ which ping
+/usr/bin/ping
+```
 
 # II. Paquets
 
@@ -454,27 +472,143 @@ $ which ls
 - ça permet aux utilisateurs de télécharger des nouveaux programmes (ou d'autres trucs) depuis un endroit safe
 
 🌞 **Installer le paquet `firefox`**
+```
+[vince@web ~]$ sudo dnf install git
+```
 
 🌞 **Utiliser une commande pour lancer Firefox**
 
-- comme d'hab, une commande, c'est un programme hein
-- déterminer le chemin vers le programme `firefox`
+```
+[vince@web ~]$ sudo find / -name "git"
+/var/lib/selinux/targeted/active/modules/100/git
+```
 
 🌞 **Installer le paquet `nginx`**
 
-- il faut utiliser le gestionnaire de paquet natif à l'OS que tu as choisi
-- si c'est un système...
-  - basé sur Debian, comme Debian lui-même, ou Ubuntu, ou Kali, ou d'autres, c'est `apt` qui est fourni
-  - basé sur RedHat, comme Rocky, Fedora, ou autres, c'est `dnf` qui est fourni
+```
+[vince@web ~]$ sudo dnf install nginx
+Last metadata expiration check: 0:11:24 ago on Tue 23 Jan 2024 10:26:41 AM CET.
+Package nginx-1:1.20.1-14.el9_2.1.x86_64 is already installed.
+Dependencies resolved.
+Nothing to do.
+Complete!
+```
 
 🌞 **Déterminer**
 
 - le chemin vers le dossier de logs de NGINX
 - le chemin vers le dossier qui contient la configuration de NGINX
-
+```
+[vince@web ~]$ sudo ls /var/log/nginx
+[sudo] password for vince:
+access.log  access.log-20240123  error.log  error.log-20240123
+```
+```
+[vince@web ~]$ ls /etc/nginx
+conf.d                  koi-utf             scgi_params
+default.d               koi-win             scgi_params.default
+fastcgi.conf            mime.types          uwsgi_params
+fastcgi.conf.default    mime.types.default  uwsgi_params.default
+fastcgi_params          nginx.conf          win-utf
+fastcgi_params.default  nginx.conf.default
+```
 🌞 **Mais aussi déterminer...**
 
 - l'adresse `http` ou `https` du serveur où vous avez téléchargé le paquet
 - une commande `apt install` ou `dnf install` permet juste de faire un téléchargement HTTP
 - ma question c'est donc : sur quel URL tu t'es connecté pour télécharger ce paquet
 - il existe un dossier qui contient la liste des URLs consultées quand vous demandez un téléchargement de paquets
+```
+ cd /etc/yum.repos.d/
+  111  ls
+  112  cat rocky
+  113  cat rocky.repo
+  114  grep http rocky.repo
+  115  grep http -r
+  116  grep http -rn
+  117  grep mirrorlist -rn
+  118  grep mirrorlist -rn -E '^mirrorlist'
+  119  grep -rn -E '^mirrorlist'
+```
+
+# Partie 3 : Poupée russe
+
+Pour finir de vous exercer avec le terminal, je vous ai préparé une poupée russe :D
+
+➜ **De mon côté, pour préparer l'exercice :**
+
+- j'ai créé un dossier `dawa/`, qui a plein de sous-dossiers, sous-fichiers, etc
+  - y'a des fichiers particuliers, les autres c'est juste du random
+- je l'ai archivé/compressé plusieurs fois
+- j'ai volontairement supprimé les extensions des fichiers compressés
+  - comme ça tu peux pas savoir à l'aide du nom si c'est un `.zip` ou un autre format
+
+➜ **Le but de l'exercice pour vous :**
+
+- je vous file le fichier que j'ai compressé/archivé plusieurs fois, que vous téléchargez dans la VM
+- vous devez :
+  - déterminer le type du fichier
+  - renommer le fichier correctement (si c'est une archive zip, il faut ajouter `.zip` à son nom)
+  - extraire l'archive
+  - répéter l'opération (car j'ai mis une archive, dans une archive, dans une archive... meow)
+- bien sûr que c'est stupide
+  - mais c'est pour vous faire pratiquer le terminal, et voir des commandes usuelles
+- une fois que vous avez trouvé le dossier `dawa/`, vous avez fini le jeu de poupées russes
+- vous allez devoir trouver les fichiers spécifiques que je vous demande à l'intérieur de ce dossier
+
+🌞 **Récupérer le fichier `meow`**
+
+- [il est dispo là](./meow) (juste à côté de ce README.md)
+- téléchargez-le à l'aide d'une commande
+
+```
+       ls -al
+  157  mkdir tp2
+  158  cd tp2/
+  159  ls
+
+       wget https://gitlab.com/it4lik/b1-linux-2023/-/raw/master/tp/2/meow?inline=false
+  161  sudo dnf install -y wget
+  162  sudo vim /etc/resolv.conf
+  163  sudo dnf install -y wget*
+  164  wget https://gitlab.com/it4lik/b1-linux-2023/-/raw/master/tp/2/meow?inline=false
+  165  wget  https://gitlab.com/it4lik/b1-linux-2023/-/raw/master/tp/2/meow
+```
+
+🌞 **Trouver le dossier `dawa/`**
+
+- le fichier `meow` récupéré est une archive compressée
+- utilisez la commande `file /path/vers/le/fichier` pour déterminer le type du fichier
+- renommez-le fichier correctement (si c'est une archive compressée ZIP, il faut ajouter `.zip` à son nom)
+- extraire l'archive avec une commande
+- répétez ces opérations jusqu'à trouver le dossier `dawa/`
+
+> *Dans les OS Linux, le format d'archivage/compression qu'on voit le plus c'est `.tar.gz` (archivage tar avec une compression gz) et moins de `.zip`.*
+```
+       ls
+  168  file meow
+  169  mv meow meow.zip
+  170  unzip meow.zip
+  171  sudo dnf install -y unzip
+  172  unzip meow.zip
+  173  ls
+  174  file meow
+  175  mv meow.xz
+  176  mv meow meow.xz
+  177  ls
+  178  xz --help
+
+```
+
+🌞 **Dans le dossier `dawa/`, déterminer le chemin vers**
+
+- le seul fichier de 15Mo
+- le seul fichier qui ne contient que des `7`
+- le seul fichier qui est nommé `cookie`
+- le seul fichier caché (un fichier caché c'est juste un fichier dont le nom commence par un `.`)
+- le seul fichier qui date de 2014
+- le seul fichier qui a 5 dossiers-parents
+  - je pense que vous avez vu que la structure c'est 50 `folderX`, chacun contient 50 dossiers `X`, et chacun contient 50 `fileX`
+  - bon bah là y'a un fichier qui est contenu dans `folderX/X/X/X/X/` et c'est le seul qui 5 dossiers parents comme ça
+
+![Matryoshka](./img/dolls.png)
