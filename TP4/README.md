@@ -111,7 +111,7 @@ Comme vu en cours, le partitionnement dans les systèmes GNU/Linux s'effectue g�
   - elle doit être dans le VG `storage`
   - elle doit occuper tout l'espace libre
 
-```
+```golang
 [vince@vm2 ~]$ sudo lvdisplay
   Devices file sys_wwid t10.ATA_VBOX_HARDDISK_VB5ad3db88-792a8c5c PVID NAAaUiQQdJVUNoa80HboRnaJlqi9Sh22 last seen on /dev/sda2 not found.
   --- Logical volume ---
