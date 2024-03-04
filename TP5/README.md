@@ -179,6 +179,12 @@ $ /srv/idcard/idcard.sh
 Here is your random cat (jpg file) : ./cat.jpg (using default token)
 ```
 
+```bash
+# Définir le token par défaut
+default_token="(using default token)"
+cat_api_token=${1:-$default_token}
+```
+
 ⭐ **Bonus 2 : votre script ne doit PAS d'exécuter en `root`**
 
 > Vous apprend à mieux gérer vos permissions : un script donné qui a un but donné, c'est une bonne pratique que de créer un utilisateur dédié. Ainsi, on limite les privilèges donnés au script pendant son exécution.
@@ -188,6 +194,14 @@ Here is your random cat (jpg file) : ./cat.jpg (using default token)
 - vous exécutez le script avec une commande `sudo -u id`
 - si le script est lancé en `root`, il quitte
   - vous pouvez utiliser la commande 🐚 `exit` pour que le script s'arrête
+
+```bash
+# Vérifier si l'utilisateur est root
+if [[ $EUID -ne 0 ]]; then
+    echo "This script must be run as root."
+    exit 1
+fi
+```
 
 ---
 
@@ -529,12 +543,128 @@ Vous pourrez alors interagir avec votre service à l'aide des commandes habituel
 
 📁 **Le script `/srv/yt/yt-v2.sh`**
 
+```bash
+voici mon fichier : #!/bin/bash
+
+# Dossier de stockage
+base_folder="/srv/yt/downloads"
+
+# Dossier de logs
+log_folder="/var/log/yt"
+
+# Emplacement du fichier de log
+log_file="$log_folder/download.log"
+
+# Fichier contenant les URLs
+url_file="/path/to/url_list.txt"
+
+# Créer le dossier de base s'il n'existe pas
+if [ ! -d "$base_folder" ]; then
+    echo "Creating base folder: $base_folder"
+    sudo mkdir -p "$base_folder"
+fi
+
+# Créer le dossier de logs s'il n'existe pas
+if [ ! -d "$log_folder" ]; then
+    echo "Creating log folder: $log_folder"
+    sudo mkdir -p "$log_folder"
+fi
+
+# Créer le fichier de log s'il n'existe pas
+if [ ! -f "$log_file" ]; then
+    sudo touch "$log_file"
+    sudo chmod 644 "$log_file"
+fi
+
+# Exécuter en boucle infinie
+while true; do
+    # Vérifier si le fichier contenant les URLs est non vide
+    if [ -s "$url_file" ]; then
+        # Lire la première URL
+        url=$(head -n 1 "$url_file")
+
+        # Télécharger la vidéo
+        video_info=$(youtube-dl --get-title --get-description "$url" 2>/dev/null)
+        video_name=$(echo "$video_info" | head -n 1)
+        video_folder="$base_folder/$video_name"
+        mkdir -p "$video_folder"
+        echo "[$(date +"%y/%m/%d %H:%M:%S")] Video $url was downloaded." >> "$log_file"
+        youtube-dl --output "$video_folder/$video_name.%(ext)s" "$url" > /dev/null 2>&1
+
+        # Enregistrer la description dans un fichier
+        echo "$video_info" > "$video_folder/description"
+
+        # Enlever la ligne du fichier d'URLs
+        sed -i '1d' "$url_file"
+    else
+        # Attendre quelques secondes si le fichier est vide
+        sleep 10
+    fi
+done
+```
+
 📁 **Fichier `/etc/systemd/system/yt.service`**
+```bash
+[Unit]
+Description=Youtube Video Download Service
+
+[Service]
+ExecStart=/srv/yt/yt-v2.sh
+User=yt
+
+[Install]
+WantedBy=multi-user.target
+```
 
 🌞 Vous fournirez dans le compte-rendu, en plus des fichiers :
 
 - un `systemctl status yt` quand le service est en cours de fonctionnement
+```
+[vince@vm ~]$ sudo systemctl status yt 
+● yt.service - Youtube Video Download Service
+     Loaded: loaded (/etc/systemd/system/yt.service; enabled; preset: disabled)
+     Active: active (running) since Mon 2024-03-04 11:08:40 CET; 13s ago
+   Main PID: 3220 (yt-v2.sh)
+      Tasks: 2 (limit: 4674)
+     Memory: 576.0K
+        CPU: 9ms
+     CGroup: /system.slice/yt.service
+             ├─3220 /bin/bash /srv/yt/yt-v2.sh
+             └─3283 sleep 10
+
+Mar 04 11:08:40 vm.tp5 systemd[1]: Started Youtube Video Download Service.
+```
+
 - un extrait de `journalctl -xe -u yt`
+```
+[vince@vm ~]$ journalctl -xe -u yt
+░░ 
+░░ The process /srv/yt/yt-v2.sh could not be executed and failed.
+░░ 
+░░ The error number returned by this process is ERRNO.
+Mar 04 11:07:12 vm.tp5 systemd[1]: yt.service: Main process exited, code=exited, status=217/USER
+░░ Subject: Unit process exited
+░░ Defined-By: systemd
+░░ Support: https://access.redhat.com/support
+░░ 
+░░ An ExecStart= process belonging to unit yt.service has exited.
+░░ 
+░░ The process' exit code is 'exited' and its exit status is 217.
+Mar 04 11:07:12 vm.tp5 systemd[1]: yt.service: Failed with result 'exit-code'.
+░░ Subject: Unit failed
+░░ Defined-By: systemd
+░░ Support: https://access.redhat.com/support
+░░ 
+░░ The unit yt.service has entered the 'failed' state with result 'exit-code'.
+Mar 04 11:08:40 vm.tp5 systemd[1]: Started Youtube Video Download Service.
+░░ Subject: A start job for unit yt.service has finished successfully
+░░ Defined-By: systemd
+░░ Support: https://access.redhat.com/support
+░░ 
+░░ A start job for unit yt.service has finished successfully.
+░░ 
+░░ The job identifier is 1198.
+```
 
 > Hé oui les commandes `journalctl` fonctionnent sur votre service pour voir les logs ! Et vous devriez constater que c'est vos `echo` qui pop. En résumé, **le STDOUT de votre script, c'est devenu les logs du service !**
 
